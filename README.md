@@ -38,8 +38,29 @@ Rasa – Intent detection, entities, dialogue flow
 Environment Config – Secure handling of API keys and URLs
 
 ## Project Structure
-                <img width="550" height="561" alt="image" src="https://github.com/user-attachments/assets/a44336d2-39c6-494c-b42f-9e3b2de3a574" />
+              graph TD
+    A[DP_PROG] --> B[Frontend]
+    A --> C[Backend]
+    A --> D[Rasa]
+    A --> E[Config & Docs]
 
+    B --> B1[index.html]
+    B --> B2[script.js]
+    B --> B3[style.css]
+
+    C --> C1[app.py]
+
+    D --> D1[data]
+    D1 --> D1a[nlu.yml]
+    D1 --> D1b[stories.yml]
+    D --> D2[actions]
+    D --> D3[config.yml]
+    D --> D4[domain.yml]
+    D --> D5[endpoints.yml]
+
+    E --> E1[.gitignore]
+    E --> E2[.env.example]
+    E --> E3[README.md]
 
 ## How to Run the Project Locally
 ### 1.Clone the repository
