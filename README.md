@@ -38,34 +38,7 @@ Rasa – Intent detection, entities, dialogue flow
 Environment Config – Secure handling of API keys and URLs
 
 ## Project Structure
-                    ┌────────────────────────┐
-                    │        DP_PROG         │
-                    │  (Project Root Folder) │
-                    └───────────┬────────────┘
-                                │
-        ┌───────────────────────┼────────────────────────┐
-        │                       │                        │
-┌───────▼───────┐       ┌───────▼────────┐       ┌──────▼──────┐
-│   Frontend    │       │    Backend     │       │     Rasa    │
-│  (User UI)    │       │  (Flask API)   │       │ (Chatbot AI)│
-└───────┬───────┘       └───────┬────────┘       └──────┬──────┘
-        │                       │                        │
- ┌──────▼────────┐      ┌──────▼───────┐      ┌─────────▼─────────┐
- │ index.html    │      │ app.py        │     │ config.yml        │
- │ script.js     │      │ (API Bridge)  │     │ domain.yml        │
- │ style.css     │      │               │     │ endpoints.yml     │
- └───────────────┘      └───────────────┘     │                   │
-                                              │   data/           │
-                                              │  ├─ nlu.yml       │
-                                              │  └─ stories.yml   │
-                                              │                   │
-                                              │ actions/          │
-                                              └───────────────────┘
-
-        ┌──────────────────────────────────────────────────────────┐
-        │                  Configuration & Docs                    │
-        │  .gitignore   |   .env.example   |   README.md           │
-        └──────────────────────────────────────────────────────────┘
+                <img width="550" height="561" alt="image" src="https://github.com/user-attachments/assets/a44336d2-39c6-494c-b42f-9e3b2de3a574" />
 
 
 ## How to Run the Project Locally
