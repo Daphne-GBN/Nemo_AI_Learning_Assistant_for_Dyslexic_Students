@@ -38,33 +38,40 @@ Rasa – Intent detection, entities, dialogue flow
 Environment Config – Secure handling of API keys and URLs
 
 ## Project Structure
-DP_PROG/
-│
-├── backend/
-│   └── app.py
-│
-├── frontend/
-│   ├── index.html
-│   ├── script.js
-│   └── style.css
-│
-├── rasa/
-│   ├── data/
-│   │   ├── nlu.yml
-│   │   └── stories.yml
-│   ├── actions/
-│   ├── config.yml
-│   ├── domain.yml
-│   └── endpoints.yml
-│
-├── .gitignore
-├── .env.example
-└── README.md
+                    ┌────────────────────────┐
+                    │        DP_PROG         │
+                    │  (Project Root Folder) │
+                    └───────────┬────────────┘
+                                │
+        ┌───────────────────────┼────────────────────────┐
+        │                       │                        │
+┌───────▼───────┐       ┌───────▼────────┐       ┌──────▼──────┐
+│   Frontend    │       │    Backend     │       │     Rasa    │
+│  (User UI)    │       │  (Flask API)   │       │ (Chatbot AI)│
+└───────┬───────┘       └───────┬────────┘       └──────┬──────┘
+        │                       │                        │
+ ┌──────▼────────┐      ┌──────▼───────┐      ┌─────────▼─────────┐
+ │ index.html    │      │ app.py        │     │ config.yml        │
+ │ script.js     │      │ (API Bridge)  │     │ domain.yml        │
+ │ style.css     │      │               │     │ endpoints.yml     │
+ └───────────────┘      └───────────────┘     │                   │
+                                              │   data/           │
+                                              │  ├─ nlu.yml       │
+                                              │  └─ stories.yml   │
+                                              │                   │
+                                              │ actions/          │
+                                              └───────────────────┘
+
+        ┌──────────────────────────────────────────────────────────┐
+        │                  Configuration & Docs                    │
+        │  .gitignore   |   .env.example   |   README.md           │
+        └──────────────────────────────────────────────────────────┘
+
 
 ## How to Run the Project Locally
 ### 1.Clone the repository
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/Daphne-GBN/Nemo_AI_Learning_Assistant_for_Dyslexic_Students.git
+cd Nemo_AI_Learning_Assistant_for_Dyslexic_Students
 
 ### 2.Set up Python environment
 python -m venv venv
