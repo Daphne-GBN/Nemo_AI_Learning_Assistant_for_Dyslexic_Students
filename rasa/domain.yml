@@ -1,0 +1,30 @@
+version: "3.1"
+
+intents:
+  - greet
+  - simplify_text
+  - goodbye
+
+responses:
+  utter_greet:
+    - text: "Hey! How are you?"
+
+  utter_simplify_text:
+    - text: "Please share the text you want simplified."
+
+  utter_goodbye:
+    - text: "Bye! Take care 👋"
+
+
+  utter_clarify:
+    - text: |
+        No problem 😊  
+        Tell me what part is confusing.
+
+  utter_handling_question:
+    - text: |
+        Let me explain this in a simple way.
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

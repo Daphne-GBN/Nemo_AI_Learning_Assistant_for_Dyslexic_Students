@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+rasa_env/
+venv/
+env/
+
+# Environment variables
+.env
+
+# Rasa generated files
+models/
+.rasa/
+rasa/.rasa/
+
+# OS / Editor junk
+.DS_Store
+.vscode/
+.idea/

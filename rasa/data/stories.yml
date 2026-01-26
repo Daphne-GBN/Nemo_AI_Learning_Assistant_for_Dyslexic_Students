@@ -1,0 +1,18 @@
+version: "3.1"
+
+stories:
+
+- story: greet path
+  steps:
+  - intent: greet
+  - action: utter_greet
+
+- story: simplify path
+  steps:
+  - intent: simplify_text
+  - action: utter_simplify_text
+
+- story: goodbye path
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye

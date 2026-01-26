@@ -1,0 +1,18 @@
+version: "3.1"
+
+rules:
+
+- rule: Respond to greeting
+  steps:
+  - intent: greet
+  - action: utter_greet
+
+- rule: Ask for text to simplify
+  steps:
+  - intent: simplify_text
+  - action: utter_simplify_text
+
+- rule: Respond to goodbye
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye

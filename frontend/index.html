@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NEMO – Learning Buddy</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    🐟 <span class="title">NEMO</span>
+    <div class="subtitle">Your friendly learning buddy</div>
+  </div>
+
+  <!-- Chat Area -->
+  <div id="chat-box"></div>
+  <div id="nemo-container">
+  <div id="nemo">
+    <div class="eye left"></div>
+    <div class="eye right"></div>
+
+    <div class="smile"></div>
+
+    <div class="fin top"></div>
+    <div class="fin bottom"></div>
+
+    <div class="tail"></div>
+  </div>
+
+  <div id="nemo-text">
+    <strong>NEMO</strong><br />
+    <small>Your friendly learning buddy</small>
+  </div>
+</div>
+
+
+  <!-- Buttons -->
+  <div class="quick-actions">
+    <button onclick="sendQuick('explain_more')">📖 Explain more</button>
+    <button onclick="speakLastBotMessage()">🔊 Read it out loud</button>
+   <button onclick="pauseSpeech()">⏸ Pause</button>
+<button onclick="resumeSpeech()">▶ Resume</button>
+<button onclick="stopSpeech()">⏹ Stop</button>
+    <button onclick="sendQuick('simpler')">✨ Simpler</button>
+  </div>
+
+  <!-- Input -->
+  <div class="input-area">
+    <input id="user-input" placeholder="Type here or tap a button 😊" />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
