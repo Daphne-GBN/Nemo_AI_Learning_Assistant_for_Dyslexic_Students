@@ -17,15 +17,48 @@ Build a modular, scalable AI system suitable for academic deployment
 
 ## System Architecture (High Level)
 
-User (Browser)
-     ↓
-Frontend (HTML/CSS/JS)
-     ↓
-Flask Backend (API Layer)
-     ↓
-Rasa Server (NLU + Dialogue)
-     ↓
-Response back to User
+                     ┌───────────────────────────┐
+                     │            User           │
+                     │   (Student / Learner)     │
+                     └─────────────┬─────────────┘
+                                   │
+                         HTTP / User Input
+                                   │
+                 ┌─────────────────▼────────────────┐
+                 │              Frontend            │
+                 │      (HTML / CSS / JavaScript)   │
+                 │   • Chat UI                      │
+                 │   • Sends user messages          │
+                 │   • Displays responses           │
+                 └─────────────────┬────────────────┘
+                                   │
+                          REST API Calls
+                                   │
+                 ┌─────────────────▼─────────────────┐
+                 │           Flask Backend           │
+                 │           (API Gateway)           │
+                 │   • Receives user queries         │
+                 │   • Handles routing & validation  │
+                 │   • Forwards requests to Rasa     │
+                 └─────────────────┬─────────────────┘
+                                   │
+                         HTTP / JSON Payload
+                                   │
+                 ┌─────────────────▼─────────────────┐
+                 │              Rasa Server          │
+                 │        (Conversational AI)        │
+                 │   • Intent classification         │
+                 │   • Entity extraction             │
+                 │   • Dialogue management           │
+                 │   • Policy selection              │
+                 └─────────────────┬─────────────────┘
+                                   │
+                         Predicted Response
+                                   │
+                 ┌─────────────────▼─────────────────┐
+                 │           Response Flow           │
+                 │  Rasa → Flask → Frontend → User   │
+                 └───────────────────────────────────┘
 
 ## Components:
 
