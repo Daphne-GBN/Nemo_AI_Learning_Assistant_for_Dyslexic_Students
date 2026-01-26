@@ -114,7 +114,7 @@ Designed keeping dyslexic cognitive patterns in mind
 
 ->Analytics for learning progress
 
-Multilingual support
+->Multilingual support
 
 ## Contributors
 
