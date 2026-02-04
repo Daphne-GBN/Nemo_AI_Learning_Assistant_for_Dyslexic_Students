@@ -7,10 +7,20 @@ stories:
   - intent: greet
   - action: utter_greet
 
+- story: learning path
+  steps:
+  - intent: ask_learning
+  - action: action_teach_with_ollama
+
 - story: simplify path
   steps:
-  - intent: simplify_text
-  - action: utter_simplify_text
+  - intent: simplify
+  - action: action_teach_with_ollama
+
+- story: explain more path
+  steps:
+  - intent: explain_more
+  - action: action_teach_with_ollama
 
 - story: goodbye path
   steps:

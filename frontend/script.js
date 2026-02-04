@@ -1,128 +1,361 @@
-const chatBox = document.getElementById("chat-box");
+﻿const chatBox = document.getElementById("chat-box");
+const input = document.getElementById("user-input");
+const loading = document.getElementById("loading");
+const sendButton = document.querySelector(".input-area .primary");
+const speedControl = document.getElementById("speed");
+const speedValue = document.getElementById("speed-value");
+const mascot = document.querySelector(".mascot");
 
-/* -----------------------------
-   ADD MESSAGE TO CHAT
------------------------------ */
+let lastBotText = "";
+const speech = window.speechSynthesis;
+let speechRate = 0.9;
+let activeUtterance = null;
+let activeMessageEl = null;
+let activeWordIndex = -1;
+let resumeMessageEl = null;
+let resumeWordIndex = null;
+let activeStartChar = 0;
+let currentBubble = null;
+
+const audioIcons = {
+  idle: "🔊",
+  playing: "⏸",
+  paused: "▶"
+};
+
+if (speedControl && speedValue) {
+  const updateSpeed = () => {
+    speechRate = parseFloat(speedControl.value);
+    speedValue.textContent = `${speechRate.toFixed(1)}x`;
+  };
+  speedControl.addEventListener("input", updateSpeed);
+  updateSpeed();
+}
+
+function setInputDisabled(state) {
+  input.disabled = state;
+  sendButton.disabled = state;
+}
+
+// Add message to chat
 function addMessage(text, sender) {
-  const msg = document.createElement("div");
-  msg.className = `message ${sender}`;
-
-  // 👇 KEY FIX: bot messages use innerHTML
+  let div;
   if (sender === "bot") {
-    msg.innerHTML = makeWordsSpeakable(text);
+    div = createMessage(text, "bot");
   } else {
-    msg.innerText = text;
+    div = createMessage(text, "user");
   }
 
-  chatBox.appendChild(msg);
+  chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* -----------------------------
-   SEND USER MESSAGE
------------------------------ */
+// Show / hide loading
+function showLoading() {
+  loading.classList.remove("hidden");
+  chatBox.setAttribute("aria-busy", "true");
+  setInputDisabled(true);
+}
+
+function hideLoading() {
+  loading.classList.add("hidden");
+  chatBox.setAttribute("aria-busy", "false");
+  setInputDisabled(false);
+}
+
+// Send normal message
 function sendMessage() {
-  const input = document.getElementById("user-input");
-  const text = input.value.trim();
-  if (!text) return;
+  const msg = input.value.trim();
+  if (!msg) return;
 
-  addMessage(text, "user");
+  addMessage(msg, "user");
   input.value = "";
+  showLoading();
 
   fetch("http://localhost:5000/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: text })
+    body: JSON.stringify({
+      message: msg
+    })
   })
     .then(res => res.json())
-    .then(data => addMessage(data.reply, "bot"));
+    .then(data => handleReply(data))
+    .catch(err => {
+      hideLoading();
+      addMessage("Nemo had trouble responding.", "bot");
+      console.error(err);
+    });
 }
 
-/* -----------------------------
-   QUICK ACTION BUTTONS
------------------------------ */
-function sendQuickAction(action) {
+// Send quick button message
+function sendQuick(text) {
+  showLoading();
+
   fetch("http://localhost:5000/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: action })
+    body: JSON.stringify({
+      action: text
+    })
   })
     .then(res => res.json())
-    .then(data => addMessage(data.reply, "bot"));
+    .then(data => handleReply(data))
+    .catch(err => {
+      hideLoading();
+      addMessage("Nemo had trouble responding.", "bot");
+      console.error(err);
+    });
 }
 
-/* -----------------------------
-   TEXT TO SPEECH (FULL MESSAGE)
------------------------------ */
-let fullSpeech = null;
+// Handle bot reply
+function handleReply(data) {
+  hideLoading();
+  lastBotText = "";
 
-function speakLastBotMessage() {
-  const bots = document.querySelectorAll(".bot");
-  if (!bots.length) return;
+  if (data && typeof data.reply === "string" && data.reply.trim()) {
+    addMessage(data.reply, "bot");
+    lastBotText = data.reply;
+    return;
+  }
 
-  const speech = new SpeechSynthesisUtterance(
-    bots[bots.length - 1].innerText
-  );
+  if (!Array.isArray(data) || data.length === 0) {
+    addMessage("I did not get a reply this time. Try again?", "bot");
+    return;
+  }
 
-  speech.rate = 0.85;
-  speech.pitch = 1.1;
-
-  speech.onstart = () => nemoTalking(true);
-  speech.onend = () => nemoTalking(false);
-
-  window.speechSynthesis.speak(speech);
+  data.forEach(item => {
+    if (item.text) {
+      addMessage(item.text, "bot");
+      lastBotText += `${item.text} `;
+    }
+  });
 }
 
+function createMessage(text, sender) {
+  const div = document.createElement("div");
+  div.className = `message ${sender === "bot" ? "bot-msg" : "user-msg"}`;
+  div.dataset.fullText = text;
 
-function pauseSpeech() {
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.pause();
+  const wordRanges = [];
+  const wordRegex = /[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = wordRegex.exec(text)) !== null) {
+    const start = match.index;
+    const end = start + match[0].length;
+
+    if (start > lastIndex) {
+      div.appendChild(document.createTextNode(text.slice(lastIndex, start)));
+    }
+
+    const wordSpan = document.createElement("span");
+    wordSpan.className = "word";
+    wordSpan.textContent = match[0];
+    wordSpan.dataset.wordIndex = wordRanges.length.toString();
+    if (sender === "bot") {
+      wordSpan.addEventListener("click", () => pronounceWord(wordSpan.textContent, div, wordSpan));
+    }
+    div.appendChild(wordSpan);
+
+    wordRanges.push({ start, end });
+    lastIndex = end;
+  }
+
+  if (lastIndex < text.length) {
+    div.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+
+  div._wordRanges = wordRanges;
+
+  const audioButton = document.createElement("button");
+  audioButton.className = "bubble-audio";
+  audioButton.type = "button";
+  audioButton.textContent = audioIcons.idle;
+  audioButton.setAttribute("aria-label", "Read aloud");
+  audioButton.addEventListener("click", () => toggleBubbleSpeech(div));
+  div.appendChild(audioButton);
+
+  return div;
+}
+
+function clearHighlights(el) {
+  if (!el) return;
+  const active = el.querySelector(".word.active");
+  if (active) active.classList.remove("active");
+  activeWordIndex = -1;
+}
+
+function highlightWord(el, index) {
+  if (!el) return;
+  if (activeWordIndex === index) return;
+  clearHighlights(el);
+  const target = el.querySelector(`.word[data-word-index="${index}"]`);
+  if (target) {
+    target.classList.add("active");
+    activeWordIndex = index;
+    resumeMessageEl = el;
+    resumeWordIndex = index;
+    el.dataset.resumeIndex = index.toString();
   }
 }
 
-function resumeSpeech() {
-  if (window.speechSynthesis.paused) {
-    window.speechSynthesis.resume();
+function getWordIndexAtChar(ranges, charIndex) {
+  for (let i = 0; i < ranges.length; i += 1) {
+    if (charIndex >= ranges[i].start && charIndex < ranges[i].end) {
+      return i;
+    }
   }
+  return -1;
+}
+
+// Text-to-speech
+function speak(text) {
+  speakMessage(text, activeMessageEl);
+}
+
+function speakMessage(text, messageEl, startChar = 0) {
+  if (!speech) return;
+  speech.cancel();
+  activeUtterance = new SpeechSynthesisUtterance(text);
+  activeUtterance.rate = speechRate;
+  activeMessageEl = messageEl || activeMessageEl;
+  activeStartChar = startChar;
+
+  clearHighlights(activeMessageEl);
+  setCurrentBubble(activeMessageEl, "playing");
+
+  if (activeMessageEl && Array.isArray(activeMessageEl._wordRanges)) {
+    activeUtterance.onboundary = event => {
+      if (event.name !== "word") return;
+      const idx = getWordIndexAtChar(
+        activeMessageEl._wordRanges,
+        event.charIndex + activeStartChar
+      );
+      if (idx !== -1) highlightWord(activeMessageEl, idx);
+    };
+  }
+
+  activeUtterance.onstart = () => setMascotSpeaking(true);
+  activeUtterance.onend = () => {
+    clearHighlights(activeMessageEl);
+    setMascotSpeaking(false);
+    setCurrentBubble(activeMessageEl, "idle");
+  };
+
+  speech.speak(activeUtterance);
+}
+
+function pronounceWord(word, messageEl, spanEl) {
+  if (!speech || !word) return;
+  speech.cancel();
+  activeMessageEl = messageEl;
+  clearHighlights(activeMessageEl);
+  if (spanEl) spanEl.classList.add("active");
+
+  activeUtterance = new SpeechSynthesisUtterance(word);
+  activeUtterance.rate = speechRate;
+  resumeMessageEl = messageEl;
+  resumeWordIndex = parseInt(spanEl?.dataset.wordIndex || "0", 10);
+  messageEl.dataset.resumeIndex = resumeWordIndex.toString();
+  setCurrentBubble(messageEl, "playing");
+  activeUtterance.onstart = () => setMascotSpeaking(true);
+  activeUtterance.onend = () => {
+    if (spanEl) spanEl.classList.remove("active");
+    setMascotSpeaking(false);
+    setCurrentBubble(messageEl, "idle");
+  };
+  speech.speak(activeUtterance);
+}
+
+function readLast() {
+  if (resumeMessageEl && resumeWordIndex !== null) {
+    speakFromWordIndex(resumeMessageEl, resumeWordIndex);
+    return;
+  }
+  if (lastBotText) speakMessage(lastBotText, chatBox.lastElementChild);
 }
 
 function stopSpeech() {
-  window.speechSynthesis.cancel();
+  speech.cancel();
+  setMascotSpeaking(false);
+  setCurrentBubble(currentBubble, "idle");
 }
 
-/* -----------------------------
-   WORD-BY-WORD SPEAKING
------------------------------ */
-let currentUtterance = null;
-
-function speakWord(word) {
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.rate = 0.8;
-  utterance.pitch = 1.1;
-  utterance.lang = "en-US";
-
-  currentUtterance = utterance;
-  window.speechSynthesis.speak(utterance);
+function speakFromWordIndex(messageEl, wordIndex) {
+  if (!messageEl || !messageEl._wordRanges || !messageEl.dataset.fullText) return;
+  const ranges = messageEl._wordRanges;
+  if (wordIndex < 0 || wordIndex >= ranges.length) return;
+  const startChar = ranges[wordIndex].start;
+  const text = messageEl.dataset.fullText.slice(startChar);
+  speakMessage(text, messageEl, startChar);
+  resumeMessageEl = messageEl;
+  resumeWordIndex = wordIndex;
+  messageEl.dataset.resumeIndex = wordIndex.toString();
 }
 
-/* -----------------------------
-   MAKE WORDS CLICKABLE
------------------------------ */
-function makeWordsSpeakable(text) {
-  return text.split(/\s+/).map(word => {
-    const clean = word.replace(/'/g, "");
-    return `<span class="speak-word" onclick="speakWord('${clean}')">${word}</span>`;
-  }).join(" ");
+function setMascotSpeaking(isSpeaking) {
+  if (!mascot) return;
+  mascot.classList.toggle("speaking", isSpeaking);
 }
 
-function nemoTalking(isTalking) {
-  const nemo = document.getElementById("nemo");
-  if (!nemo) return;
+function toggleBubbleSpeech(messageEl) {
+  if (!messageEl) return;
+  const state = getBubbleState(messageEl);
 
-  nemo.style.animation = isTalking
-    ? "float 1.5s ease-in-out infinite"
-    : "float 3s ease-in-out infinite";
+  if (currentBubble && currentBubble !== messageEl) {
+    speech.cancel();
+    setCurrentBubble(currentBubble, "idle");
+  }
+
+  if (currentBubble !== messageEl) {
+    currentBubble = messageEl;
+    const resumeIndex = parseInt(messageEl.dataset.resumeIndex || "0", 10);
+    if (!Number.isNaN(resumeIndex) && resumeIndex > 0) {
+      speakFromWordIndex(messageEl, resumeIndex);
+    } else {
+      speakMessage(messageEl.dataset.fullText || messageEl.textContent, messageEl);
+    }
+    return;
+  }
+
+  if (state === "playing") {
+    speech.pause();
+    setCurrentBubble(messageEl, "paused");
+    setMascotSpeaking(false);
+    return;
+  }
+
+  if (state === "paused") {
+    speech.resume();
+    setCurrentBubble(messageEl, "playing");
+    setMascotSpeaking(true);
+    return;
+  }
+
+  const resumeIndex = parseInt(messageEl.dataset.resumeIndex || "0", 10);
+  if (!Number.isNaN(resumeIndex) && resumeIndex > 0) {
+    speakFromWordIndex(messageEl, resumeIndex);
+  } else {
+    speakMessage(messageEl.dataset.fullText || messageEl.textContent, messageEl);
+  }
 }
 
+function setCurrentBubble(messageEl, state) {
+  if (!messageEl) return;
+  currentBubble = messageEl;
+  setBubbleState(messageEl, state);
+}
+
+function setBubbleState(messageEl, state) {
+  const button = messageEl.querySelector(".bubble-audio");
+  if (!button) return;
+  button.dataset.state = state;
+  button.textContent = audioIcons[state] || audioIcons.idle;
+}
+
+function getBubbleState(messageEl) {
+  const button = messageEl.querySelector(".bubble-audio");
+  return button?.dataset.state || "idle";
+}

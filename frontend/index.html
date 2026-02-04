@@ -1,54 +1,52 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NEMO – Learning Buddy</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="page">
+    <header class="hero">
+      <div class="badge">NEMO</div>
+      <div class="mascot" aria-hidden="true" title="Nemo star">
+        <div class="star-face">
+          <span class="eye left"></span>
+          <span class="eye right"></span>
+          <span class="mouth"></span>
+        </div>
+      </div>
+      <h1>Learning Buddy for Dyslexic Students</h1>
+      <p class="subtitle">Clear, calm, and supportive chat with read-aloud help.</p>
+    </header>
 
-  <!-- Header -->
-  <div class="header">
-    🐟 <span class="title">NEMO</span>
-    <div class="subtitle">Your friendly learning buddy</div>
-  </div>
+    <main class="panel" aria-labelledby="chat-title">
+      <h2 id="chat-title" class="sr-only">Chat</h2>
 
-  <!-- Chat Area -->
-  <div id="chat-box"></div>
-  <div id="nemo-container">
-  <div id="nemo">
-    <div class="eye left"></div>
-    <div class="eye right"></div>
+      <div id="chat-box" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false"></div>
 
-    <div class="smile"></div>
+      <div id="loading" class="loading hidden" aria-live="polite">Nemo star is thinking…</div>
 
-    <div class="fin top"></div>
-    <div class="fin bottom"></div>
+      <div class="controls">
+        <button class="ghost" onclick="sendQuick('simpler')">Simpler</button>
+        <button class="ghost" onclick="stopSpeech()">Stop</button>
+      </div>
 
-    <div class="tail"></div>
-  </div>
+      <div class="speech-controls">
+        <label for="speed">Voice speed</label>
+        <input id="speed" type="range" min="0.25" max="1.75" step="0.05" value="0.9" />
+        <span id="speed-value" aria-live="polite">0.9x</span>
+      </div>
 
-  <div id="nemo-text">
-    <strong>NEMO</strong><br />
-    <small>Your friendly learning buddy</small>
-  </div>
-</div>
+      <form class="input-area" onsubmit="event.preventDefault(); sendMessage();">
+        <label class="sr-only" for="user-input">Type your message</label>
+        <input id="user-input" placeholder="Type here" autocomplete="off" />
+        <button class="primary" type="submit">Send</button>
+      </form>
+    </main>
 
-
-  <!-- Buttons -->
-  <div class="quick-actions">
-    <button onclick="sendQuick('explain_more')">📖 Explain more</button>
-    <button onclick="speakLastBotMessage()">🔊 Read it out loud</button>
-   <button onclick="pauseSpeech()">⏸ Pause</button>
-<button onclick="resumeSpeech()">▶ Resume</button>
-<button onclick="stopSpeech()">⏹ Stop</button>
-    <button onclick="sendQuick('simpler')">✨ Simpler</button>
-  </div>
-
-  <!-- Input -->
-  <div class="input-area">
-    <input id="user-input" placeholder="Type here or tap a button 😊" />
-    <button onclick="sendMessage()">Send</button>
+    <footer class="hint">Tip: hover or focus a reply to hear it read aloud.</footer>
   </div>
 
   <script src="script.js"></script>
