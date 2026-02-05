@@ -21,6 +21,23 @@ conversation_context = {}
 # LLM TEACHING FUNCTION
 # -----------------------------
 
+def _extract_ollama_response(res):
+    try:
+        data = res.json()
+    except Exception:
+        return None
+
+    if isinstance(data, dict):
+        if isinstance(data.get("response"), str):
+            return data["response"].strip()
+        if isinstance(data.get("message"), dict) and isinstance(data["message"].get("content"), str):
+            return data["message"]["content"].strip()
+        if isinstance(data.get("error"), str):
+            raise ValueError(data["error"])
+
+    return None
+
+
 def simplify_with_llm(text, topic=None):
     topic_hint = ""
     if topic:
@@ -54,10 +71,13 @@ def simplify_with_llm(text, topic=None):
                 "num_predict": 250,
                 "stream": False
             },
-            timeout=60
+            timeout=180
         )
 
-        return res.json()["response"].strip()
+        reply = _extract_ollama_response(res)
+        if reply:
+            return reply
+        raise ValueError("Missing response in Ollama payload.")
 
     except Exception as e:
         print("OLLAMA ERROR:", e)
@@ -96,10 +116,13 @@ def simplify_more_with_llm(text, topic=None):
                 "num_predict": 120,
                 "stream": False
             },
-            timeout=60
+            timeout=180
         )
 
-        return res.json()["response"].strip()
+        reply = _extract_ollama_response(res)
+        if reply:
+            return reply
+        raise ValueError("Missing response in Ollama payload.")
 
     except Exception as e:
         print("OLLAMA ERROR:", e)
