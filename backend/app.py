@@ -1,5 +1,6 @@
 ﻿from flask import Flask, request, jsonify
 from flask_cors import CORS
+import os
 import requests
 
 # -----------------------------
@@ -7,9 +8,23 @@ import requests
 # -----------------------------
 
 app = Flask(__name__)
-CORS(app)
 
-RASA_URL = "http://localhost:5005/webhooks/rest/webhook"
+
+def _parse_origins(value):
+    if not value:
+        return ["*"]
+    return [origin.strip() for origin in value.split(",") if origin.strip()]
+
+
+FRONTEND_ORIGINS = _parse_origins(os.getenv("FRONTEND_ORIGINS"))
+CORS(app, resources={r"/*": {"origins": FRONTEND_ORIGINS}})
+
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434").rstrip("/")
+RASA_URL = os.getenv("RASA_URL")
+if not RASA_URL:
+    rasa_host = os.getenv("RASA_HOST", "http://localhost")
+    rasa_port = os.getenv("RASA_PORT", "5005")
+    RASA_URL = f"{rasa_host}:{rasa_port}/webhooks/rest/webhook"
 
 # -----------------------------
 # SIMPLE CONTEXT MEMORY
@@ -63,7 +78,7 @@ def simplify_with_llm(text, topic=None):
 
     try:
         res = requests.post(
-            "http://localhost:11434/api/generate",
+            f"{OLLAMA_URL}/api/generate",
             json={
                 "model": "llama3",
                 "prompt": prompt,
@@ -108,7 +123,7 @@ def simplify_more_with_llm(text, topic=None):
 
     try:
         res = requests.post(
-            "http://localhost:11434/api/generate",
+            f"{OLLAMA_URL}/api/generate",
             json={
                 "model": "llama3",
                 "prompt": prompt,
@@ -252,5 +267,7 @@ def chat():
 # -----------------------------
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    port = int(os.getenv("PORT", "5000"))
+    debug = os.getenv("FLASK_DEBUG", "").lower() in ("1", "true", "yes")
+    app.run(host="0.0.0.0", port=port, debug=debug)
 # To run the app: python backend/app.py
