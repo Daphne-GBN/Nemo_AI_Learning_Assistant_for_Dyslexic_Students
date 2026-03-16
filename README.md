@@ -152,7 +152,6 @@ Designed keeping dyslexic cognitive patterns in mind
 ## Contributors
 
 Lead Developer: Daphne Grace Backiam Nathaniel 2023BCSE07066
-Team Members: Arunima Banerjee 2023BCSE07039, Angiras Venugopal 2023BCSE07021 , Taksir Alam 2023BCSE0781
 
 Project Type: Academic / Accessibility-focused AI system
 
